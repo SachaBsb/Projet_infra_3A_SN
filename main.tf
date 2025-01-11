@@ -9,18 +9,21 @@ terraform {
 
 provider "docker" {}
 
+# Define the Nginx image resource
 resource "docker_image" "nginx" {
   name         = "nginx"
   keep_locally = false
 }
 
+# Create two containers using count
 resource "docker_container" "nginx" {
+  count = 4 # Create 2 containers
+
   image = docker_image.nginx.image_id
-  name  = "tutorial"
+  name  = "tutorial-${count.index}" # Unique name for each container
 
   ports {
     internal = 80
-    external = 8000
+    external = 8000 + count.index # Unique external port for each container
   }
 }
-
