@@ -1,0 +1,91 @@
+terraform {
+  required_providers {
+    docker = {
+      source  = "kreuzwerker/docker"
+      version = "~> 3.0.1"
+    }
+  }
+}
+
+provider "docker" {}
+
+# Image Docker pour Spark
+resource "docker_image" "spark" {
+  name         = "bitnami/spark:3.3.0"
+  keep_locally = false
+}
+
+# Réseau Docker pour permettre la communication entre les conteneurs
+resource "docker_network" "spark_network" {
+  name = "spark-network"
+}
+
+# Volume Docker pour partager des fichiers et scripts (si nécessaire)
+resource "docker_volume" "spark_data" {
+  name = "spark-data"
+}
+
+# Spark Master
+resource "docker_container" "spark_master" {
+  image = docker_image.spark.name
+  name  = "spark-master"
+
+  # Connecter au réseau Docker
+  networks_advanced {
+    name    = docker_network.spark_network.name
+    aliases = ["spark-master"]
+  }
+
+  # Ajouter un volume pour les scripts et données partagés
+  mounts {
+    target = "/opt/spark/data"
+    source = docker_volume.spark_data.name
+    type   = "volume"
+  }
+
+  # Ports exposés
+  ports {
+    internal = 7077
+    external = 7077
+  }
+  ports {
+    internal = 8080
+    external = 8080
+  }
+}
+
+# Spark Worker 1
+resource "docker_container" "spark_worker_1" {
+  image = docker_image.spark.name
+  name  = "spark-worker-1"
+
+  # Connecter au réseau Docker
+  networks_advanced {
+    name    = docker_network.spark_network.name
+    aliases = ["spark-worker-1"]
+  }
+
+  # Ports exposés pour le Worker
+  ports {
+    internal = 8081
+    external = 8081
+  }
+}
+
+# Spark Worker 2
+resource "docker_container" "spark_worker_2" {
+  image = docker_image.spark.name
+  name  = "spark-worker-2"
+
+  # Connecter au réseau Docker
+  networks_advanced {
+    name    = docker_network.spark_network.name
+    aliases = ["spark-worker-2"]
+  }
+
+  # Ports exposés pour le Worker
+  ports {
+    internal = 8082
+    external = 8082
+  }
+}
