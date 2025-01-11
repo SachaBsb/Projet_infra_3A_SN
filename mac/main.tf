@@ -9,14 +9,15 @@ terraform {
 
 provider "docker" {}
 
-# Image Docker Python
-resource "docker_image" "python" {
-  name         = "python:3.9-slim"
+# Image Docker Spark
+resource "docker_image" "pyspark" {
+  name         = "bitnami/spark:3.3.0"
   keep_locally = false
 }
 
+# Conteneur pour exécuter WordCount avec PySpark
 resource "docker_container" "wordcount" {
-  image = docker_image.python.name
+  image = docker_image.pyspark.name
   name  = "wordcount-container"
 
   # Monter un volume pour les fichiers locaux
@@ -26,7 +27,7 @@ resource "docker_container" "wordcount" {
     type   = "bind"
   }
 
-  # Commande pour exécuter le script Python
+  # Commande pour exécuter le script PySpark
   command = [
     "/app/entrypoint.sh"
   ]

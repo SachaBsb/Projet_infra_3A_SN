@@ -1,32 +1,30 @@
 # -*- coding: utf-8 -*-
-import sys
-from collections import Counter
+from pyspark import SparkContext
 
-def main():
-    if len(sys.argv) < 2:
-        print("Usage: python3 wordcount.py <file>")
-        sys.exit(1)
+def main(input_file):
+    # Initialiser SparkContext
+    sc = SparkContext("local", "Word Count")
 
-    file_path = sys.argv[1]
-    print(f"Lecture du fichier : {file_path}")  # Debug
+    # Lire le fichier
+    text_file = sc.textFile(input_file)
 
-    try:
-        # Lire le fichier
-        with open(file_path, 'r') as f:
-            text = f.read()
-        print(f"Contenu lu : {text}")  # Debug
-    except FileNotFoundError:
-        print("Erreur : Fichier introuvable")
-        sys.exit(1)
-
-    # Compter les mots
-    words = text.split()
-    print(f"Mots trouvés : {words}")  # Debug
-    word_count = Counter(words)
+    # Transformer et compter les mots
+    counts = (text_file
+              .flatMap(lambda line: line.split(" "))
+              .map(lambda word: (word, 1))
+              .reduceByKey(lambda a, b: a + b))
 
     # Afficher les résultats
-    for word, count in word_count.items():
+    for word, count in counts.collect():
         print(f"{word}: {count}")
 
+    # Arrêter SparkContext
+    sc.stop()
+
 if __name__ == "__main__":
-    main()
+    import sys
+    if len(sys.argv) != 2:
+        print("Usage: python wordcount.py <file>", file=sys.stderr)
+        sys.exit(-1)
+
+    main(sys.argv[1])
