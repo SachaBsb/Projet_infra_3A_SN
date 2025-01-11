@@ -17,13 +17,13 @@ resource "docker_image" "nginx" {
 
 # Create two containers using count
 resource "docker_container" "nginx" {
-  count = 4 # Create 2 containers
+  count = 1 # Only one container
 
   image = docker_image.nginx.image_id
-  name  = "tutorial-${count.index}" # Unique name for each container
+  name  = "tutorial"
 
   ports {
     internal = 80
-    external = 8000 + count.index # Unique external port for each container
+    external = 8000
   }
 }
