@@ -1,0 +1,15 @@
+#cloud-config
+users:
+  - name: ubuntu
+    ssh-authorized-keys:
+      - ssh-rsa AAA...votre_clé_publique...
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    groups: sudo
+    shell: /bin/bash
+
+password: ubuntu
+chpasswd:
+  expire: false
+ssh_pwauth: true
+packages:
+  - qemu-guest-agent
