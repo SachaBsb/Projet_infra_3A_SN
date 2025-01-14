@@ -2,7 +2,7 @@
 users:
   - name: ubuntu
     ssh-authorized-keys:
-      - ssh-rsa AAA...votre_clé_publique...
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDeLEVE/AuO2UKohRfrxMGHAPee30HZM8+E6vQJdgyO33xWmGDvlUOGM/rPW1j9rf8p9BZcoJsnVu5mE6i+s/3+cM6243g7nN94rPqqXIOW1L45VTmAn5EnmwRyEMofd8I3P9Xc+0ni3fM/3Jl6yFyMl2ntEhoQOAeZdiS47t1P1vQHuhR+JjRWvqzXZ2dk1AlANjemyUNtmink1BEXjLP/hSp2didGIVyx+/nH4L1vQwaUumfYCwpX2mjCGjMCY8QY1UfgiqWAZjkuOakZZs6qG4mjxO1Gd4E4f9wuJ3lfkdqPR9NcV2rKEdUDGtx1yDlmeRBfQCJAgx2+6NED5xeL
     sudo: ['ALL=(ALL) NOPASSWD:ALL']
     groups: sudo
     shell: /bin/bash
