@@ -1,0 +1,5 @@
+Terraform qui marche avec
+un container avec l'image python3
+qui execute python3 app/wordcount.py app/data.txt
+à l'aide de entrypoint 
+On utilise PYSPARK maintenant, cela fonctionne mais prends plus de temps
