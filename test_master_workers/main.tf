@@ -27,7 +27,7 @@ resource "docker_container" "spark_master" {
   }
 
   env = [
-    "SPARK_MODE=master" # Sets the container as the Spark master
+    "SPARK_MODE=master"
   ]
 
   ports {
@@ -39,22 +39,30 @@ resource "docker_container" "spark_master" {
     internal = 8080
     external = 8080
   }
+
+  networks_advanced {
+    name = "spark-network"
+  }
 }
 
 # Worker containers for Spark
 resource "docker_container" "spark_worker" {
-  count = 3 # Create 3 workers
+  count = 3
 
   image = docker_image.pyspark.name
   name  = "spark-worker-${count.index}"
 
   env = [
-    "SPARK_MODE=worker",               # Sets the container as a Spark worker
-    "SPARK_MASTER_URL=spark://spark-master:7077" # Connect to the master
+    "SPARK_MODE=worker",
+    "SPARK_MASTER_URL=spark://spark-master:7077"
   ]
 
   ports {
     internal = 8081 + count.index
     external = 8081 + count.index
+  }
+
+  networks_advanced {
+    name = "spark-network"
   }
 }
