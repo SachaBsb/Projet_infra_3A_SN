@@ -9,10 +9,9 @@ terraform {
 
 provider "docker" {}
 
-# Docker image for Spark
 resource "docker_image" "pyspark" {
-  name         = "bitnami/spark:3.3.0"
-  keep_locally = false
+  name = "custom-spark"
+  keep_locally = true
 }
 
 # Master container for Spark

@@ -1,0 +1,25 @@
+FROM ubuntu:20.04
+
+# Install essential tools and dependencies
+RUN apt update && apt install -y \
+    openjdk-11-jdk \
+    wget \
+    curl \
+    iputils-ping \
+    vim \
+    && apt clean
+
+# Install Apache Spark
+RUN wget https://downloads.apache.org/spark/spark-3.3.0/spark-3.3.0-bin-hadoop3.tgz -O /tmp/spark.tgz && \
+    tar -xzf /tmp/spark.tgz -C /opt && \
+    mv /opt/spark-3.3.0-bin-hadoop3 /opt/spark && \
+    rm /tmp/spark.tgz
+
+# Set environment variables
+ENV SPARK_HOME=/opt/spark
+ENV PATH=$SPARK_HOME/bin:$PATH
+
+# Set up entrypoint
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
