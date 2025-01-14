@@ -3,3 +3,21 @@ un container avec l'image python3
 qui execute python3 app/wordcount.py app/data.txt
 à l'aide de entrypoint 
 On utilise PYSPARK maintenant, cela fonctionne mais prends plus de temps
+
+On lance l'archi avec
+1 driver
+1 master
+2 worker ;
+
+pb, c'est le driver qui a executer wordcount.py
+les worker n'ont rien fait, pourtant le réseau est bien défini, ils sont bien connecter et on a lancé
+spark-submit",
+    "--master", "spark://spark-master:7077",
+    "/app/wordcount.py",
+    "/app/data.txt"
+
+
+résolution dans wordcount.py on avait 
+sc = SparkContext("local", "Word Count")
+
+il faut sc = SparkContext("spark://spark-master:7077", "Word Count") pour ne pas etre en local

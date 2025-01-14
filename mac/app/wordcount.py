@@ -3,7 +3,7 @@ from pyspark import SparkContext
 
 def main(input_file):
     # Initialiser SparkContext
-    sc = SparkContext("local", "Word Count")
+    sc = SparkContext("spark://spark-master:7077", "Word Count")
 
     # Lire le fichier
     text_file = sc.textFile(input_file)
