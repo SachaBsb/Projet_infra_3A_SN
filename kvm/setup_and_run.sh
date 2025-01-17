@@ -26,12 +26,7 @@ if ! virsh list --all >/dev/null 2>&1; then
 fi
 echo "Libvirt is configured and accessible."
 
-echo "Activating Python virtual environment..."
-# Activate the virtual environment - if no venv created use python3 -m venv projet-infra-venv
-source projet-infra-env/bin/activate || {
-  echo "Error: Unable to activate the virtual environment. Ensure 'project-env' exists."
-  exit 1
-}
+
 
 echo "Running Terraform to set up infrastructure..."
 # Run Terraform commands
@@ -40,6 +35,20 @@ terraform apply -auto-approve || {
   echo "Error: Terraform apply failed."
   exit 1
 }
+
+echo "Updating Ansible inventory..."
+# Call update_inventory.sh to generate the inventory
+./update_inventory.sh || {
+  echo "Error: Failed to update Ansible inventory."
+  exit 1
+}
+
+echo "Activating Python virtual environment..."
+# Activate the virtual environment - if no venv created use python3 -m venv projet-infra-venv
+source projet-infra-env/bin/activate || {
+  echo "Error: Unable to activate the virtual environment. Ensure 'project-env' exists."
+  exit 1
+}    
 
 echo "Running Ansible playbooks..."
 # Run Ansible playbooks
