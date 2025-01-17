@@ -1,13 +1,21 @@
-variable "vm_name" {
-  default = "test-vm"
+variable "master_name" {
+  default = "master-vm"
+}
+
+variable "worker_count" {
+  default = 2
+}
+
+variable "worker_prefix" {
+  default = "worker-vm"
 }
 
 variable "vm_memory" {
-  default = 2048
+  default = 1024
 }
 
 variable "vm_vcpu" {
-  default = 2
+  default = 1
 }
 
 variable "vm_image" {
@@ -16,4 +24,8 @@ variable "vm_image" {
 
 variable "vm_network" {
   default = "default"
+}
+
+variable "vm_name" {
+  default = "my-first-vm"
 }
