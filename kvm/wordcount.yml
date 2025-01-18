@@ -1,0 +1,34 @@
+---
+- name: Automatiser le WordCount
+  hosts: all
+  become: yes
+  tasks:
+    - name: Mettre à jour les paquets
+      apt:
+        update_cache: yes
+
+    - name: Installer Python
+      apt:
+        name: python3
+        state: present
+
+    - name: Créer le fichier d'entrée pour le WordCount
+      copy:
+        dest: /tmp/input.txt
+        content: 
+          test test je suis tu nous vous comment tu es nous toi avec ta tete t as cru je vais manger un test
+          test test je suis tu nous vous comment test test je suis tu nous vous comment
+
+    - name: Déployer le script WordCount
+      copy:
+        src: ./wordcount.py
+        dest: /tmp/wordcount.py
+        mode: '0755'
+
+    - name: Exécuter le WordCount
+      command: python3 /tmp/wordcount.py /tmp/input.txt
+      register: wordcount_result
+
+    - name: Afficher le résultat du WordCount
+      debug:
+        msg: "{{ wordcount_result.stdout }}"
