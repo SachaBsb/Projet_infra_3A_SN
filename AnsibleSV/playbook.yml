@@ -1,0 +1,27 @@
+---
+- name: Deploy Docker containers using Terraform
+  hosts: all
+  become: yes
+  tasks:
+    # 1. Exécuter Terraform localement
+    - name: Execute Terraform on the local machine
+      command: terraform -chdir=/path/to/terraform/project init
+      delegate_to: localhost
+
+    - name: Apply Terraform on the local machine
+      command: terraform -chdir=/path/to/terraform/project apply -auto-approve
+      delegate_to: localhost
+
+    # 2. Copier le projet Terraform sur la machine distante
+    - name: Copy Terraform project to the remote machine
+      synchronize:
+        src: /path/to/terraform/project/
+        dest: /tmp/terraform_project/
+        recursive: yes
+
+    # 3. Exécuter Terraform sur la machine distante
+    - name: Execute Terraform on the remote machine
+      command: terraform -chdir=/tmp/terraform_project init
+
+    - name: Apply Terraform on the remote machine
+      command: terraform -chdir=/tmp/terraform_project apply -auto-approve
