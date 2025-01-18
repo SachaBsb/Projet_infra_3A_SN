@@ -43,6 +43,7 @@ echo "Updating Ansible inventory..."
   exit 1
 }
 
+
 echo "Activating Python virtual environment..."
 # Activate the virtual environment - if no venv created use python3 -m venv projet-infra-venv
 source projet-infra-env/bin/activate || {

@@ -9,6 +9,9 @@ Path vers la cle ssh et adresses ip des vms update dans inventory par update_inv
 
 Pour l'instant, run : `./setup_and_run.sh` pour lancer tout le programme, on pourrait rendre le debug plus facile en divisant en différents .sh les différentes commandes dans setup_and_run.sh pour debugb plus facilement mais ya pas le temps !
 
+Beaucoup d'erreurs, j'etais allé jusqu'a l'etape de partition pour les workers du texte sur lequel il faut faire le wordcount, la communication entre vms fonctionnait (`ansible -i inventory all -m ping`). J'ai eu des erreurs et maintenant j'en suis au début du run de la partie ansible qui fail, je pense qu'il faut revenir dans la conv chatgpt juste avant le msg ou j'annonce que j'ai eu mon best résultat pour reprendre cette config.
+
+
 ## Reste a faire : 
 1. Faire en sorte que les adresses ip soient gérée dynamiquement ou statiquement mais qu'on ait pas besoin de les copier coller ou alors que les vms soient gérées via leurs noms : 
     
