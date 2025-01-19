@@ -2,13 +2,15 @@
 - name: Deploy Docker containers using Terraform
   hosts: localhost
   tasks:
-    # # 1. Exécuter Terraform localement
-    # - name: Execute Terraform on the local machine
-    #   command: terraform -chdir=/Users/victor/Documents/N7/ProjetInfrastructure/Projet_infra_3A_SN/AnsibleSV init
+    # 1. Exécuter Terraform localement
+    - name: Init terraform host
+      command: terraform -chdir=/Users/victor/Documents/N7/ProjetInfrastructure/Projet_infra_3A_SN/AnsibleSV init
 
-    # - name: Apply Terraform on the local machine
-    #   command: terraform -chdir=/Users/victor/Documents/N7/ProjetInfrastructure/Projet_infra_3A_SN/AnsibleSV apply -auto-approve
+    - name: Apply Terraform on the local machine
+      command: terraform -chdir=/Users/victor/Documents/N7/ProjetInfrastructure/Projet_infra_3A_SN/AnsibleSV apply -var="is_master=true" -auto-approve
 
+- name: Deploy Docker containers using Terraform
+  hosts: localhost
   tasks:
     # Copier le projet Terraform sur la machine distante avec scp
     - name: Copy Terraform project to the remote machine using scp
@@ -22,4 +24,4 @@
       command: terraform -chdir=/tmp/terraform_project/AnsibleSV/ init
 
     - name: Apply Terraform on the remote machine
-      command: terraform -chdir=/tmp/terraform_project/AnsibleSV/ apply -auto-approve
+      command: terraform -chdir=/tmp/terraform_project/AnsibleSV/ apply -var="is_master=false" -auto-approve -lock=false

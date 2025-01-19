@@ -9,4 +9,4 @@
   hosts: remote_host
   tasks:
     - name: Apply Terraform on the remote machine
-      command: terraform -chdir=/tmp/terraform_project/AnsibleSV/ destroy -auto-approve
+      command: terraform -chdir=/tmp/terraform_project/AnsibleSV/ destroy -auto-approve -lock=false
