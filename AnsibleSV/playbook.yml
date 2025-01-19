@@ -1,27 +1,25 @@
 ---
 - name: Deploy Docker containers using Terraform
-  hosts: all
-  become: yes
+  hosts: localhost
   tasks:
-    # 1. Exécuter Terraform localement
-    - name: Execute Terraform on the local machine
-      command: terraform -chdir=/path/to/terraform/project init
-      delegate_to: localhost
+    # # 1. Exécuter Terraform localement
+    # - name: Execute Terraform on the local machine
+    #   command: terraform -chdir=/Users/victor/Documents/N7/ProjetInfrastructure/Projet_infra_3A_SN/AnsibleSV init
 
-    - name: Apply Terraform on the local machine
-      command: terraform -chdir=/path/to/terraform/project apply -auto-approve
-      delegate_to: localhost
+    # - name: Apply Terraform on the local machine
+    #   command: terraform -chdir=/Users/victor/Documents/N7/ProjetInfrastructure/Projet_infra_3A_SN/AnsibleSV apply -auto-approve
 
-    # 2. Copier le projet Terraform sur la machine distante
-    - name: Copy Terraform project to the remote machine
-      synchronize:
-        src: /path/to/terraform/project/
-        dest: /tmp/terraform_project/
-        recursive: yes
+  tasks:
+    # Copier le projet Terraform sur la machine distante avec scp
+    - name: Copy Terraform project to the remote machine using scp
+      command: scp -r -i ~/.ssh/id_rsa /Users/victor/Documents/N7/ProjetInfrastructure/Projet_infra_3A_SN/AnsibleSV/ root@172.20.10.6:/tmp/terraform_project/
 
-    # 3. Exécuter Terraform sur la machine distante
+- name: Deploy Docker containers using Terraform
+  hosts: remote_host
+  tasks:
+    # Exécuter Terraform sur la machine distante
     - name: Execute Terraform on the remote machine
-      command: terraform -chdir=/tmp/terraform_project init
+      command: terraform -chdir=/tmp/terraform_project/AnsibleSV/ init
 
     - name: Apply Terraform on the remote machine
-      command: terraform -chdir=/tmp/terraform_project apply -auto-approve
+      command: terraform -chdir=/tmp/terraform_project/AnsibleSV/ apply -auto-approve
