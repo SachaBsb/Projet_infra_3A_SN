@@ -1,5 +1,16 @@
 
 # **Diary** : 
+# 20/01/2025
+Il faut recommencer terraform/kvm/ansible avec une solution wordcount qui utilise spark.
+Je recommence de zéro pour faire une vm configurée avec terraform/kvm/ansible qui utilise spark pour le wordcount.
+
+## Problemes rencontrés : 
+1. Terraform apply bloqué par un volume déjà existant : 
+    
+    `sudo virsh vol-delete --pool default <volume_name>`
+
+
+
 
 # 17/01/2025
 Je vais continuer de resoudre les pbs avec chatgpt en lui disant a chaque fois quelle solution a fonctionné pour qu'il me liste bien a la fin les difficultés rencontrées pour le rapport et continuer de taffer.

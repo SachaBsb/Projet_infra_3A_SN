@@ -1,0 +1,16 @@
+---
+- name: Deploy and run WordCount script with Spark
+  hosts: ubuntu-vm
+  become: yes
+  vars:
+    input_file_path: "/home/lousteau/Desktop/Projets/learn-terraform-docker-container/kvm-2/input.txt"  # Définir la variable pour le chemin du fichier
+
+  tasks:
+    - name: Copy the WordCount script to the VM
+      copy:
+        src: wordcount.py
+        dest: /home/ubuntu/wordcount.py
+        mode: '0755'
+
+    - name: Run the WordCount Spark job
+      command: spark-submit /home/ubuntu/wordcount.py "{{ input_file_path }}"

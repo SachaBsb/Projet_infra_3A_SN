@@ -1,0 +1,43 @@
+---
+- name: Install Java, Scala, and Spark on the VM
+  hosts: ubuntu-vm
+  become: yes
+  tasks:
+    - name: Install Java (required for Spark)
+      apt:
+        name: openjdk-8-jdk
+        state: present
+
+    - name: Install Scala (required for Spark)
+      apt:
+        name: scala
+        state: present
+
+    - name: Download Apache Spark
+      get_url:
+        url: https://archive.apache.org/dist/spark/spark-3.3.0/spark-3.3.0-bin-hadoop3.2.tgz
+        dest: /tmp/spark-3.3.0-bin-hadoop3.2.tgz
+
+    - name: Extract Apache Spark
+      unarchive:
+        src: /tmp/spark-3.3.0-bin-hadoop3.2.tgz
+        dest: /opt/
+        remote_src: yes
+
+    - name: Set Spark environment variables
+      lineinfile:
+        path: "/home/ubuntu/.bashrc"
+        line: "{{ item }}"
+        state: present
+      with_items:
+        - 'export SPARK_HOME=/opt/spark-3.3.0-bin-hadoop3.2'
+        - 'export PATH=$PATH:$SPARK_HOME/bin'
+        - 'export PYSPARK_PYTHON=python3'
+
+    - name: Reload the .bashrc to apply the environment variables
+      shell: source /home/ubuntu/.bashrc
+
+    - name: Install Python dependencies (for PySpark)
+      pip:
+        name: pyspark
+        state: present
