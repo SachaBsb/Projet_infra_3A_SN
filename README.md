@@ -1,5 +1,16 @@
 
 # **Diary** : 
+
+# 21/01/2025
+De gros problèmes avec un wordcount basé sur java/spark, le stockage de la vm est immédiatement saturé lors de l'installation de java/spark. 
+
+Je vais tester avec python/pyspark voir si c'est plus léger et si cela ne marche pas j'essaierai avec d'autres vms.
+
+Y'en a marre, ca marche pas non plus avec python/spark, je vais chercher d'autres vms et mettre les pistes que j'ai exploré ici : 
+1. [Un github](https://github.com/ctl6998/kvm-remote-host) qui propose du 
+
+D'apres victor il faut absolument dans la vm scala, spark et java python sont peut etre necessaire aussi, peu importe que le wordcount soit en python ou java. Info à verif ma gueule.
+
 # 20/01/2025
 Il faut recommencer terraform/kvm/ansible avec une solution wordcount qui utilise spark.
 Je recommence de zéro pour faire une vm configurée avec terraform/kvm/ansible qui utilise spark pour le wordcount.
