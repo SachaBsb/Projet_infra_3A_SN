@@ -1,3 +1,9 @@
+variable "is_master" {
+  description = "Set to true if this is the master node, false if this is a worker node"
+  type        = bool
+  default     = true
+}
+
 terraform {
   required_providers {
     docker = {
@@ -9,31 +15,35 @@ terraform {
 
 provider "docker" {}
 
-# Variable pour identifier le rôle de l'hôte
-variable "is_master" {
-  type    = bool
-  default = true  # Par défaut, l'hôte est considéré comme le master
+resource "docker_network" "local_spark_network" {
+  count  = var.is_master ? 1 : 0
+  name   = "spark-network-local"
+  driver = "bridge"
+
+  ipam_config {
+    subnet = "172.18.0.0/16" # Sous-réseau pour le master
+  }
 }
 
-# Créer le Docker Network uniquement si is_master est true
-resource "docker_network" "spark_network" {
-  count = var.is_master ? 1 : 0
-  name  = "spark-network"
+resource "docker_network" "distant_spark_network" {
+  count = var.is_master ? 0 : 1
+  name  = "spark-network-distant"
 }
 
-# Image Docker Spark
-resource "docker_image" "pyspark" {
-  name         = "bitnami/spark:3.3.0"
+# Pull the Spark image
+resource "docker_image" "spark_image" {
+  name         = "victordevo/sparkma:latest"
   keep_locally = false
 }
 
-# Spark Master
-resource "docker_container" "spark_master" {
-  count = var.is_master ? 1 : 0  # Créer uniquement si l'hôte est le master
-  image = docker_image.pyspark.name
-  name  = "spark-master"
 
-  # Ports pour Spark
+# Resources for the master node
+resource "docker_container" "spark_master" {
+  count = var.is_master ? 1 : 0
+
+  name  = "spark-master"
+  image = docker_image.spark_image.name
+
   ports {
     internal = 7077
     external = 7077
@@ -44,32 +54,9 @@ resource "docker_container" "spark_master" {
     external = 8080
   }
 
-  mounts {
-    source = "${abspath("${path.module}/app")}"
-    target = "/app"
-    type   = "bind"
-  }
-
   networks_advanced {
-    name = var.is_master ? docker_network.spark_network[0].name : "bridge"
+    name = docker_network.local_spark_network[0].name
   }
-
-  # Configuration spécifique au master
-  env = [
-  "SPARK_MODE=master",
-  "SPARK_MASTER_HOST=0.0.0.0", # Permet de se lier à toutes les interfaces réseau
-  "SPARK_MASTER_PORT=7077",
-  "SPARK_LOCAL_IP=0.0.0.0"
-]
-
-}
-
-# Spark Worker 1
-resource "docker_container" "spark_worker_1" {
-  count = var.is_master ? 0 : 1
-
-  image = docker_image.pyspark.name
-  name  = "spark-worker-1"
 
   mounts {
     source = "${abspath("${path.module}/app")}"
@@ -77,18 +64,24 @@ resource "docker_container" "spark_worker_1" {
     type   = "bind"
   }
 
-  # Configuration spécifique au worker
   env = [
-    "SPARK_MODE=worker",
-    "SPARK_MASTER=spark://localhost:7077" # Utilisation du tunnel SSH
+    "SPARK_MODE=master",
+    "SPARK_MASTER_HOST=spark-master",
+    "SPARK_MASTER_PORT=7077"
+  ]
+
+  command = [
+    "/opt/spark/bin/spark-class",
+    "org.apache.spark.deploy.master.Master",
+    "--host", "spark-master"
   ]
 }
 
-# Conteneur pour exécuter le script WordCount
 resource "docker_container" "wordcount" {
   count = var.is_master ? 1 : 0
-  image = docker_image.pyspark.name
+
   name  = "wordcount-container"
+  image = docker_image.spark_image.name
 
   mounts {
     source = "${abspath("${path.module}/app")}"
@@ -96,16 +89,81 @@ resource "docker_container" "wordcount" {
     type   = "bind"
   }
 
-  # Connecter au réseau Docker si is_master est true
   networks_advanced {
-    name = var.is_master ? docker_network.spark_network[0].name : "bridge"
+    name = docker_network.local_spark_network[0].name
   }
 
-  # Commande pour exécuter le script avec le master et les workers
   command = [
-    "spark-submit",
+    "/opt/spark/bin/spark-submit",
     "--master", "spark://spark-master:7077",
     "/app/wordcount.py",
     "/app/input.txt"
+  ]
+}
+
+# Resources for the worker nodes
+resource "docker_container" "spark_worker_1" {
+  count = var.is_master ? 0 : 1
+
+  name  = "spark-worker-1"
+  image = docker_image.spark_image.name
+
+  ports {
+    internal = 8081
+    external = 8081
+  }
+
+  networks_advanced {
+    name = docker_network.distant_spark_network[0].name
+  }
+
+  mounts {
+    source = "${abspath("${path.module}/app")}"
+    target = "/app"
+    type   = "bind"
+  }
+
+  env = [
+    "SPARK_MODE=worker",
+    "SPARK_MASTER=spark://172.20.10.8:7077"
+  ]
+
+  command = [
+    "/opt/spark/bin/spark-class",
+    "org.apache.spark.deploy.worker.Worker",
+    "spark://172.20.10.8:7077"
+  ]
+}
+
+resource "docker_container" "spark_worker_2" {
+  count = var.is_master ? 0 : 1
+
+  name  = "spark-worker-2"
+  image = docker_image.spark_image.name
+
+  ports {
+    internal = 8082
+    external = 8082
+  }
+
+  networks_advanced {
+    name = docker_network.distant_spark_network[0].name
+  }
+
+  mounts {
+    source = "${abspath("${path.module}/app")}"
+    target = "/app"
+    type   = "bind"
+  }
+
+  env = [
+    "SPARK_MODE=worker",
+    "SPARK_MASTER=spark://172.20.10.8:7077"
+  ]
+
+  command = [
+    "/opt/spark/bin/spark-class",
+    "org.apache.spark.deploy.worker.Worker",
+    "spark://172.20.10.8:7077"
   ]
 }

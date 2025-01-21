@@ -1,9 +1,19 @@
-FROM debian:bookworm-slim
+# Base image
+FROM spark:3.5.4-scala2.12-java11-ubuntu
 
-# Installer Java et outils nécessaires
-RUN apt-get update && apt-get install -y \
-    iproute2 \
-    iputils-ping && \
-    apt-get clean
+# Set the user to root
+USER root
 
-CMD ["bash"]
+# Install Python3, pip, and additional tools
+RUN set -ex; \
+    apt-get update; \
+    apt-get install -y \
+    python3 \
+    python3-pip \
+    iproute2 \           
+    iputils-ping \       
+    net-tools \          
+    nano; \              
+    rm -rf /var/lib/apt/lists/*
+
+CMD ["tail", "-f", "/dev/null"]
