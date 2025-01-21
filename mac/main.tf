@@ -93,6 +93,13 @@ resource "docker_container" "spark_worker_2" {
     "SPARK_MODE=worker",
     "SPARK_MASTER=spark://spark-master:7077"
   ]
+
+  command = [
+    "tail",
+    "-f",
+    "/dev/null"
+  ]
+  
 }
 
 # Conteneur pour exécuter le script WordCount
