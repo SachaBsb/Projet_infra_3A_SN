@@ -24,13 +24,6 @@ resource "libvirt_volume" "vm_disk" {
   format = "qcow2"
 }
 
-resource "libvirt_volume" "extra_disk" {
-  name   = "extra-disk"
-  pool   = "default"
-  size   = 10 # GB for the new storage volume
-  format = "qcow2"
-}
-
 resource "libvirt_domain" "vm" {
   name   = var.vm_name
   memory = var.vm_memory
@@ -40,15 +33,12 @@ resource "libvirt_domain" "vm" {
     volume_id = libvirt_volume.vm_disk.id
   }
   
-  disk {
-    volume_id = libvirt_volume.extra_disk.id  # Add the new storage volume
-  }
-
   network_interface {
     network_name = var.vm_network
+    wait_for_lease = true
   }
 
-  console {
+/*   console {
     type = "pty"
     target_type = "serial"
     target_port = "0"
@@ -58,5 +48,14 @@ resource "libvirt_domain" "vm" {
     type        = "spice"
     listen_type = "none"
   }
+ */  
+ 
+  cloudinit = libvirt_cloudinit_disk.vm_cloudinit.id
+
 }
+
+output "vm_ip" {
+  value = libvirt_domain.vm.network_interface[0].addresses[0]
+}
+
 

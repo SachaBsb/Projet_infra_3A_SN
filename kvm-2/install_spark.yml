@@ -1,6 +1,6 @@
 ---
 - name: Install Java, Scala, and Spark on the VM
-  hosts: ubuntu-vm
+  hosts: my-first-vm
   become: yes
   tasks:
     - name: Install Java (required for Spark)

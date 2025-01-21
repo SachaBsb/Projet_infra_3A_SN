@@ -3,7 +3,7 @@ variable "vm_name" {
 }
 
 variable "vm_memory" {
-  default = 2048
+  default = 4096
 }
 
 variable "vm_vcpu" {
@@ -11,6 +11,7 @@ variable "vm_vcpu" {
 }
 
 variable "vm_image" {
+  # default = "/var/lib/libvirt/images/ubuntu-22.04.qcow2"
   default = "/var/lib/libvirt/images/ubuntu-base.qcow2"
 }
 

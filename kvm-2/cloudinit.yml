@@ -6,3 +6,16 @@ users:
     sudo: ['ALL=(ALL) NOPASSWD:ALL']
     groups: sudo
     shell: /bin/bash
+
+password: ubuntu
+chpasswd:
+  expire: false
+ssh_pwauth: true
+packages:
+  - qemu-guest-agent
+
+network:
+  version: 2
+  ethernets:
+    ens3:
+      dhcp4: true
