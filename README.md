@@ -1,12 +1,16 @@
 
 # **Diary** : 
 
-
 # 22/01/2025
 Apres etude du github, 
 1. copie de fichier du host vers les vms : commande scp ou playbook ansible
 2. on peut faire des fichiers yaml qui lancent des scripts dans les vms 
-3. 
+3. Tout marche bien dans les yml pour l'installation mais ils ne semblent pas bon pour run des commandes, il vaut peut etre mieux copier des scripts dans les vms et les triggers avec ansible (yml).
+
+Youpi ! Tout fonctionne tres bien avec une seule vm, il faudrait juste un output dans la machine physique. 
+
+
+Il faut maintenant refaire un réseau et voir pour partager les fichiers en HDFS.
 
 # 21/01/2025
 De gros problèmes avec un wordcount basé sur java/spark, le stockage de la vm est immédiatement saturé lors de l'installation de java/spark. 

@@ -55,6 +55,15 @@
         mode: 755
         recurse: yes
 
+    - name: Create directory for Scripts
+      file:
+        path: /home/ubuntu/script
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+        mode: 755
+        recurse: yes
+
     - name: Copy WordCount Java file to VM
       copy:
         src: /home/lousteau/Desktop/Projets/learn-terraform-docker-container/kvm-2/wordcount/WordCount.java

@@ -22,14 +22,18 @@ EOF
 echo "Inventory updated successfully."
 
 
-# Copie files in VM
-echo "Copy files in VMs"
-scp compile_wordcount.sh create_jar.sh run_wordcount.sh ubuntu@$vm_ip:home/ubuntu/scripts
-echo "Files copied successfully"
-
-# Ansible playbooks
+#####################
+# Ansible playbooks #
+#####################
 echo "Install required packages in VMs"
 ansible-playbook -i inventory ansible/install_java_requirements.yml
+
+# Copy files in VM
+echo "Copy files in VMs"
+scp script/compile_wordcount.sh script/create_jar.sh script/run_wordcount.sh ubuntu@$vm_ip:/home/ubuntu/script/
+echo "Files copied successfully"
+
+
 echo "Run wordcount"
 ansible-playbook -i inventory ansible/run_java_wordcount.yml
 
