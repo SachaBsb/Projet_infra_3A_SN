@@ -1,6 +1,13 @@
 
 # **Diary** : 
 
+
+# 22/01/2025
+Apres etude du github, 
+1. copie de fichier du host vers les vms : commande scp ou playbook ansible
+2. on peut faire des fichiers yaml qui lancent des scripts dans les vms 
+3. 
+
 # 21/01/2025
 De gros problèmes avec un wordcount basé sur java/spark, le stockage de la vm est immédiatement saturé lors de l'installation de java/spark. 
 
@@ -10,6 +17,16 @@ Y'en a marre, ca marche pas non plus avec python/spark, je vais chercher d'autre
 1. [Un github](https://github.com/ctl6998/kvm-remote-host) qui propose du 
 
 D'apres victor il faut absolument dans la vm scala, spark et java python sont peut etre necessaire aussi, peu importe que le wordcount soit en python ou java. Info à verif ma gueule.
+
+Augmenter la taille du disk comme dans le github mentionné plus haut a marché, je peux tout installer maintenant, mais le wordcount python/spark ne fonctionne pas, à regler la prochaine fois ie faire un wordcount qui marche en java oub python.
+
+## Utilisation de la commande `sudo du -sh /* | sort -h` à l'intérieur de la VM pour vérifier 
+1. VM avant d'utiliser le github
+    65M     /boot
+    631M    /var
+    650M    /snap
+    1.3G    /usr
+2. 
 
 # 20/01/2025
 Il faut recommencer terraform/kvm/ansible avec une solution wordcount qui utilise spark.

@@ -24,7 +24,7 @@ echo "Inventory updated successfully."
 
 # Copie files in VM
 echo "Copy files in VMs"
-scp  ubuntu@$vm_ip:home/ubuntu/
+scp compile_wordcount.sh create_jar.sh run_wordcount.sh ubuntu@$vm_ip:home/ubuntu/scripts
 echo "Files copied successfully"
 
 # Ansible playbooks
