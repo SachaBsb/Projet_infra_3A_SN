@@ -1,0 +1,8 @@
+---
+- name: Deploy and run WordCount script with Spark
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Run the WordCount Spark job
+      command: spark-submit /home/ubuntu/wordcount/wordcount.py /home/ubuntu/wordcount/input.py

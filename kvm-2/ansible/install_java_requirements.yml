@@ -1,0 +1,99 @@
+---
+- name: Set up Java and Apache Spark for WordCount
+  hosts: all
+  become: yes
+  tasks:
+    - name: Update apt package index
+      apt:
+        update_cache: yes
+
+    - name: Install OpenJDK
+      apt:
+        name: openjdk-8-jdk
+        state: present
+
+    - name: Verify Java installation
+      command: java -version
+      ignore_errors: yes
+
+    - name: Create directory for Spark installation
+      file:
+        path: /home/ubuntu/install
+        state: directory
+        mode: '0755'
+
+    - name: Download Spark
+      get_url:
+        url: https://sd-160040.dedibox.fr/hagimont/software/spark-2.4.3-bin-hadoop2.7.tgz
+        dest: /home/ubuntu/install/spark-2.4.3-bin-hadoop2.7.tgz
+        mode: '0644'
+
+    - name: Extract Spark archive
+      ansible.builtin.unarchive:
+        src: /home/ubuntu/install/spark-2.4.3-bin-hadoop2.7.tgz
+        dest: /home/ubuntu/install
+        remote_src: yes
+
+    - name: Set up Spark environment variables in .bashrc
+      blockinfile:
+        path: /home/ubuntu/.bashrc
+        block: |
+          # Spark environment variables
+          export SPARK_HOME=/home/ubuntu/install/spark-2.4.3-bin-hadoop2.7
+          export PATH=$PATH:$SPARK_HOME/bin:$SPARK_HOME/sbin
+          insertafter: EOF
+
+    - name: Reload .bashrc
+      shell: . /home/ubuntu/.bashrc
+
+    - name: Create directory for WordCount
+      file:
+        path: /home/ubuntu/wordcount
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+        mode: 755
+        recurse: yes
+
+    - name: Copy WordCount Java file to VM
+      copy:
+        src: /home/lousteau/Desktop/Projets/learn-terraform-docker-container/kvm-2/wordcount/WordCount.java
+        dest: /home/ubuntu/wordcount/WordCount.java
+        mode: 0755
+
+    - name: Copy input file to VM
+      copy:
+        src: ../input.txt
+        dest: /home/ubuntu/wordcount/input.txt
+        owner: ubuntu
+        group: ubuntu
+        mode: 0644
+
+
+    - name: Install Maven (optional, for dependency management)
+      apt:
+        name: maven
+        state: present
+
+    # - name: Compile WordCount Java program
+    #   shell: |
+    #     javac -cp "$SPARK_HOME/jars/*" -d /home/ubuntu/wordcount/ /home/ubuntu/wordcount/WordCount.java
+    #   args:
+    #     executable: /bin/bash
+
+    # - name: Create JAR file
+    #   shell: |
+    #     jar -cvf /home/ubuntu/wordcount/wordcount.jar -C /home/ubuntu/wordcount/ .
+    #   args:
+    #     executable: /bin/bash
+
+    # - name: Run WordCount with Spark
+    #   shell: |
+    #     $SPARK_HOME/bin/spark-submit \
+    #       --class WordCount \
+    #       --master local[2] \
+    #       /home/ubuntu/wordcount/wordcount.jar \
+    #       /path/to/input.txt \
+    #       /path/to/output
+    #   args:
+    #     executable: /bin/bash

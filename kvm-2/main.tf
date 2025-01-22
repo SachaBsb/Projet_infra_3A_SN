@@ -11,17 +11,24 @@ provider "libvirt" {
   uri = "qemu:///system"
 }
 
-
 resource "libvirt_cloudinit_disk" "vm_cloudinit" {
   name      = "vm-cloudinit"
-  user_data = file("cloudinit.yml")
+  user_data = file("ansible/cloudinit.yml")
 }
 
-resource "libvirt_volume" "vm_disk" {
+resource "libvirt_volume" "vm_base" {
   name   = var.vm_name
   pool   = "default"
   source = var.vm_image
   format = "qcow2"
+}
+
+resource "libvirt_volume" "vm_disk" {
+  name           = "vm-disk.qcow2"
+  pool           = "default"
+  base_volume_id = libvirt_volume.vm_base.id
+  size           = 20 * 1024 * 1024 * 1024
+  format         = "qcow2"
 }
 
 resource "libvirt_domain" "vm" {

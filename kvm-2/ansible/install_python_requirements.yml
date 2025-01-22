@@ -1,0 +1,48 @@
+---
+- name: Install Python and PySpark
+  hosts: all
+  become: yes
+  tasks:
+    - name: Update apt package index
+      apt:
+        update_cache: yes
+
+    - name: Install Python3 and pip
+      apt:
+        name:
+          - python3
+          - python3-pip
+        state: present
+
+    - name: Install PySpark
+      pip:
+        name: pyspark
+
+    - name: Install Java (required for PySpark)
+      apt:
+        name: openjdk-11-jdk
+        state: present
+
+    - name: Create a directory for the WordCount application
+      file:
+        path: /home/ubuntu/wordcount
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+        mode: 0755
+
+    - name: Copy WordCount script to VM
+      copy:
+        src: ../wordcount/wordcount.py
+        dest: /home/ubuntu/wordcount/wordcount.py
+        owner: ubuntu
+        group: ubuntu
+        mode: 0755
+
+    - name: Copy input file to VM
+      copy:
+        src: ../input.txt
+        dest: /home/ubuntu/wordcount/input.txt
+        owner: ubuntu
+        group: ubuntu
+        mode: 0644
