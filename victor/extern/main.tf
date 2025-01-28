@@ -15,19 +15,27 @@ terraform {
 
 provider "docker" {}
 
+# Configure le réseau local pour le master
 resource "docker_network" "local_spark_network" {
   count  = var.is_master ? 1 : 0
   name   = "spark-network-local"
   driver = "bridge"
 
   ipam_config {
-    subnet = "172.18.0.0/16" # Sous-réseau pour le master
+    subnet = "172.16.0.0/16" # Sous-réseau pour le master
   }
 }
 
+# Configure le réseau distant pour les workers
 resource "docker_network" "distant_spark_network" {
-  count = var.is_master ? 0 : 1
-  name  = "spark-network-distant"
+  count  = var.is_master ? 0 : 1
+  name   = "spark-network-distant"
+  driver = "bridge"
+
+  ipam_config {
+    subnet = "172.15.0.0/16" # Sous-réseau pour les workers
+  }
+
 }
 
 # Pull the Spark image
@@ -35,7 +43,6 @@ resource "docker_image" "spark_image" {
   name         = "victordevo/sparkma:latest"
   keep_locally = false
 }
-
 
 # Resources for the master node
 resource "docker_container" "spark_master" {
@@ -77,20 +84,21 @@ resource "docker_container" "spark_master" {
   ]
 }
 
-resource "docker_container" "wordcount" {
+# Resources for the master node
+resource "docker_container" "driver" {
   count = var.is_master ? 1 : 0
 
-  name  = "wordcount-container"
+  name  = "driver"
   image = docker_image.spark_image.name
+
+  networks_advanced {
+    name = docker_network.local_spark_network[0].name
+  }
 
   mounts {
     source = "${abspath("${path.module}/app")}"
     target = "/app"
     type   = "bind"
-  }
-
-  networks_advanced {
-    name = docker_network.local_spark_network[0].name
   }
 
   command = [
@@ -125,7 +133,9 @@ resource "docker_container" "spark_worker_1" {
 
   env = [
     "SPARK_MODE=worker",
-    "SPARK_MASTER=spark://172.20.10.8:7077"
+    "SPARK_MASTER=spark://172.20.10.8:7077",
+    "SPARK_WORKER_CORES=1",
+    "SPARK_WORKER_MEMORY=1024m"
   ]
 
   command = [
@@ -158,7 +168,9 @@ resource "docker_container" "spark_worker_2" {
 
   env = [
     "SPARK_MODE=worker",
-    "SPARK_MASTER=spark://172.20.10.8:7077"
+    "SPARK_MASTER=spark://172.20.10.8:7077",
+    "SPARK_WORKER_CORES=1",
+    "SPARK_WORKER_MEMORY=1024m"
   ]
 
   command = [
@@ -167,33 +179,3 @@ resource "docker_container" "spark_worker_2" {
     "spark://172.20.10.8:7077"
   ]
 }
-
-resource "docker_container" "spark_worker_3" {
-  count = var.is_master ? 1 : 0
-
-  name  = "spark-worker-3"
-  image = docker_image.spark_image.name
-
-  ports {
-    internal = 8083
-    external = 8083
-  }
-
-  mounts {
-    source = "${abspath("${path.module}/app")}"
-    target = "/app"
-    type   = "bind"
-  }
-
-  env = [
-    "SPARK_MODE=worker",
-    "SPARK_MASTER=spark://172.20.10.8:7077"
-  ]
-
-  command = [
-    "/opt/spark/bin/spark-class",
-    "org.apache.spark.deploy.worker.Worker",
-    "spark://172.20.10.8:7077"
-  ]
-}
-

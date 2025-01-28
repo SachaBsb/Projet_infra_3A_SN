@@ -1,0 +1,8 @@
+---
+- name: Destroy terraform infrastructure host A (local)
+  hosts: localhost
+  tasks:
+    - name: Destroy Terraform
+      ansible.builtin.shell:
+        cmd: terraform destroy -auto-approve
+        chdir: /tmp/spoon_project/

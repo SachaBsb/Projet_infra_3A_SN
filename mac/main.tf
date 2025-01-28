@@ -113,7 +113,17 @@ resource "docker_container" "wordcount" {
   command = [
     "spark-submit",
     "--master", "spark://spark-master:7077",
+    "--executor-memory", "512m",
+    "--executor-cores", "1",
+    "--driver-memory", "512m",
+    "--driver-cores", "1",
+    "--conf", "spark.dynamicAllocation.enabled=true",
+    "--conf", "spark.dynamicAllocation.minExecutors=1",
+    "--conf", "spark.dynamicAllocation.maxExecutors=2",
+    "--conf", "spark.memory.fraction=0.6",
+    "--conf", "spark.memory.storageFraction=0.5",
     "/app/wordcount.py",
     "/app/data.txt"
   ]
+
 }

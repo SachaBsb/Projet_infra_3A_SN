@@ -1,0 +1,81 @@
+- name: Deploy containers on the host A (local)
+  hosts: localhost
+  tasks:
+
+    - name: Check if Terraform is installed
+      ansible.builtin.command:
+        cmd: terraform version
+
+    - name: Remove terraform folder
+      ansible.builtin.shell:
+        cmd: "rm -rf /tmp/spoon_project/ || true"
+   
+    - name: Copy Terraform files
+      ansible.builtin.copy:
+        src: terraform/
+        dest: /tmp/spoon_project/
+        remote_src: no
+
+    - name: Remove .*
+      ansible.builtin.shell:
+        cmd: "rm -rf .terraform* || true"
+        chdir: /tmp/spoon_project/
+
+    - name: Copy app files
+      ansible.builtin.copy:
+        src: app/
+        dest: /tmp/spoon_project/app/
+        remote_src: no
+
+    - name: Initialize Terraform
+      ansible.builtin.shell:
+        cmd: "terraform init"
+        chdir: /tmp/spoon_project/
+
+    - name: Apply Terraform
+      ansible.builtin.shell:
+        cmd: terraform apply -auto-approve -var="is_master=true"
+        chdir: /tmp/spoon_project/
+
+
+
+- name: Deploy containers on the host B (remote)
+  hosts: remote_host
+  tasks:
+  
+    - name: Ensure /tmp/spoon_project/ exists
+      ansible.builtin.file:
+        path: /tmp/spoon_project/
+        state: directory
+        mode: '0755'
+
+    - name: Remove terraform folder
+      ansible.builtin.shell:
+        cmd: "rm -rf /tmp/spoon_project/ || true"
+
+    - name: Copy Terraform files
+      ansible.builtin.copy:
+        src: terraform/
+        dest: /tmp/spoon_project/
+        remote_src: no
+
+    - name: Remove .*
+      ansible.builtin.shell:
+        cmd: "rm -rf .terraform* || true"
+        chdir: /tmp/spoon_project/
+
+    - name: Copy app files
+      ansible.builtin.copy:
+        src: app/
+        dest: /tmp/spoon_project/app/
+        remote_src: no
+
+    - name: Initialize Terraform
+      ansible.builtin.shell:
+        cmd: "terraform init"
+        chdir: /tmp/spoon_project/
+
+    - name: Apply Terraform
+      ansible.builtin.shell:
+        cmd: terraform apply -auto-approve -var="is_master=false"
+        chdir: /tmp/spoon_project/
