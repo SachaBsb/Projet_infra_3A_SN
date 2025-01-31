@@ -118,7 +118,6 @@ resource "docker_container" "driver" {
     "/app/wordcount.py",
     "/app/input.txt"
   ]
-
 }
 
 resource "docker_container" "spark_worker_1" {

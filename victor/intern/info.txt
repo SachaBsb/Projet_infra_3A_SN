@@ -94,3 +94,17 @@ ssh root@172.20.10.6 ps aux | grep ping
 
 ssh root@172.20.10.6 docker ps
 ssh root@172.20.10.6 docker logs 
+
+
+
+Je ne peut pas utiliser ca ca me nique le réseau
+~ # ip route del default via 10.33.33.1 dev chip0
+
+A la place 
+
+ip route add 172.15.0.0/16 via 10.33.33.1 dev chip0
+ip route add 172.20.10.6 via 10.33.33.1 dev chip0
+
+ca remache yeay
+
+
