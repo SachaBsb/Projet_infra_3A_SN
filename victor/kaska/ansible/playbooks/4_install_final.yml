@@ -1,0 +1,26 @@
+---
+- name: Configure container with Python...
+  hosts: spark_cluster
+  become: yes
+  tasks:
+    # 1. Mettre à jour les paquets et installer Python3 et pip
+    - name: Update apt cache and install Python3 and pip
+      apt:
+        name:
+          - python3
+          - python3-pip
+          - iptables
+          - iproute2
+          - iputils-ping
+          - net-tools
+          - curl
+          - tcpdump
+        state: present
+        update_cache: yes
+
+    # 3. Nettoyer le cache APT pour économiser de l'espace
+    - name: Clean APT cache
+      shell: rm -rf /var/lib/apt/lists/*
+
+
+

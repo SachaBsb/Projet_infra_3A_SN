@@ -1,0 +1,106 @@
+---
+- name: Configure Ubuntu VM with Java 17
+  hosts: spark_cluster
+  become: yes
+  vars:
+    architecture_map:
+      x86_64: amd64
+      aarch64: arm64
+
+    java_binaries:
+      amd64:
+        url: https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.13%2B11/OpenJDK17U-jdk_x64_linux_hotspot_17.0.13_11.tar.gz
+      arm64:
+        url: https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.13%2B11/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.13_11.tar.gz
+
+  tasks:
+    # 1. Installer les dépendances nécessaires
+    - name: Install required packages
+      apt:
+        name:
+          - curl
+          - wget
+          - fontconfig
+          - ca-certificates
+          - locales
+        state: present
+        update_cache: yes
+
+    # 2. Configurer les locales
+    - name: Configure UTF-8 locales
+      command: locale-gen en_US.UTF-8
+
+    # 3. Définir les variables nécessaires pour Java
+    - name: Set environment variables for Java
+      lineinfile:
+        path: /etc/environment
+        line: "{{ item }}"
+        state: present
+      loop:
+        - JAVA_HOME=/opt/java/openjdk
+        - PATH=$JAVA_HOME/bin:$PATH
+
+    # 4. Créer le répertoire pour OpenJDK
+    - name: Create directory for OpenJDK
+      file:
+        path: /opt/java/openjdk
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    # 5. Mapper l'architecture
+    - name: Map architecture for Java binaries
+      set_fact:
+        mapped_arch: "{{ architecture_map[ansible_architecture] | default('unsupported') }}"
+
+    - name: Fail if architecture is unsupported
+      fail:
+        msg: "Unsupported architecture: {{ ansible_architecture }}"
+      when: mapped_arch == "unsupported"
+
+    # 6. Télécharger OpenJDK
+    - name: Download OpenJDK binary
+      get_url:
+        url: "{{ java_binaries[mapped_arch].url }}"
+        dest: /tmp/openjdk.tar.gz
+
+    # 7. Extraire OpenJDK
+    - name: Extract OpenJDK to /opt/java
+      unarchive:
+        src: /tmp/openjdk.tar.gz
+        dest: /opt/java/openjdk
+        remote_src: yes
+        extra_opts:
+          - --strip-components=1
+
+    # 8. Vérifier que Java est bien extrait
+    - name: Verify Java files are extracted
+      shell: |
+        ls /opt/java/openjdk/bin/java
+      register: java_check
+      failed_when: java_check.rc != 0
+
+    - name: Set environment variables in /etc/environment
+      lineinfile:
+        path: /etc/environment
+        line: "{{ item }}"
+        state: present
+      loop:
+        - JAVA_HOME=/opt/java/openjdk
+        - PATH=/opt/java/openjdk/bin:$PATH
+
+    - name: Verify Java installation with updated environment
+      shell: |
+        export JAVA_HOME=/opt/java/openjdk
+        export PATH=$JAVA_HOME/bin:$PATH
+        java -version
+      register: java_output
+
+    - debug:
+        msg: "{{ java_output.stdout }}"
+
+
+
+
+

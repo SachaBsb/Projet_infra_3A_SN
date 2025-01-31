@@ -1,0 +1,51 @@
+---
+- name: Execute WordCount on Spark cluster via SSH
+  hosts: spark_cluster
+  become: yes
+  tasks:
+    # 1. Vérifier l'installation de Spark
+    - name: Verify Spark installation
+      shell: |
+        export JAVA_HOME=/opt/java/openjdk
+        export PATH=$JAVA_HOME/bin:$PATH
+        /opt/spark/bin/spark-shell --version
+      register: spark_output
+      failed_when: spark_output.rc != 0
+
+    - debug:
+        msg: "Spark installation verified on {{ inventory_hostname }}: {{ spark_output.stdout }}"
+
+
+    # 4. Démarrer Spark Master
+    - name: Start Spark Master
+      shell: |
+        export JAVA_HOME=/opt/java/openjdk
+        export PATH=$JAVA_HOME/bin:$PATH
+        /opt/spark/sbin/start-master.sh
+      when: inventory_hostname == "master"
+
+    # 5. Démarrer les Spark Workers
+    - name: Start Spark Worker
+      shell: |
+        export JAVA_HOME=/opt/java/openjdk
+        export PATH=$JAVA_HOME/bin:$PATH
+        /opt/spark/sbin/start-worker.sh spark://{{ hostvars['master']['ansible_host'] }}:7077
+      when: inventory_hostname in groups['worker1'] or inventory_hostname in groups['worker2']
+
+    # 6. Exécuter WordCount depuis le driver
+    - name: Run WordCount program on Spark cluster
+      shell: |
+        export JAVA_HOME=/opt/java/openjdk
+        export PATH=$JAVA_HOME/bin:$PATH
+        /opt/spark/bin/spark-submit \
+          --master spark://{{ hostvars['master']['ansible_host'] }}:7077 \
+          --deploy-mode client \
+          /data/wordcount.py /data/input.txt
+      register: wordcount_output
+      failed_when: wordcount_output.rc != 0
+      when: inventory_hostname == "driver"
+
+    # 7. Afficher les résultats
+    - debug:
+        msg: "Output from WordCount on {{ inventory_hostname }}: {{ wordcount_output.stdout }}"
+      when: inventory_hostname == "driver"

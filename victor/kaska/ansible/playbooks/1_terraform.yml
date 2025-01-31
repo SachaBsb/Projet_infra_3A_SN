@@ -1,0 +1,13 @@
+---
+- name: Launch Terraform (local)
+  hosts: localhost
+  tasks:
+    - name: Initialize Terraform
+      ansible.builtin.shell:
+        cmd: "terraform init"
+        chdir: /tmp/omega_project/terraform
+
+    - name: Apply Terraform
+      ansible.builtin.shell:
+        cmd: terraform apply -auto-approve
+        chdir: /tmp/omega_project/terraform

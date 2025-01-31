@@ -1,0 +1,8 @@
+---
+- name: Destroy Terraform (local)
+  hosts: localhost
+  tasks:
+    - name: Destroy Terraform
+      ansible.builtin.shell:
+        cmd: terraform destroy -auto-approve
+        chdir: /tmp/omega_project/terraform

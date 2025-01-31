@@ -1,0 +1,28 @@
+- name: Setup local
+  hosts: localhost
+  tasks:
+
+    - name: Check if Terraform is installed
+      ansible.builtin.command:
+        cmd: terraform version
+
+    - name: Remove all folder
+      ansible.builtin.shell:
+        cmd: "rm -rf /tmp/omega_project/ || true"
+   
+    - name: Copy Terraform files
+      ansible.builtin.copy:
+        src: ../../terraform/
+        dest: /tmp/omega_project/terraform
+        remote_src: no
+
+    - name: Remove .*
+      ansible.builtin.shell:
+        cmd: "rm -rf .terraform* || true"
+        chdir: /tmp/omega_project/terraform
+
+    - name: Copy data files
+      ansible.builtin.copy:
+        src: ../../data/
+        dest: /tmp/omega_project/data/
+        remote_src: no

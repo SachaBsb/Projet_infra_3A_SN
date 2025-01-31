@@ -1,0 +1,136 @@
+---
+- name: Configure Apache Spark on a container
+  hosts: spark_cluster
+  become: yes
+  vars:
+    spark_download_url: https://downloads.apache.org/spark/spark-3.5.4/spark-3.5.4-bin-hadoop3-scala2.13.tgz
+    spark_install_dir: /opt/spark
+
+  tasks:
+    # 1. Installer les dépendances nécessaires
+    - name: Install required packages
+      apt:
+        name:
+          - wget
+          - bash
+          - tini
+          - libc6
+          - libpam-modules
+          - krb5-user
+          - libnss3
+          - procps
+          - net-tools
+          - gosu
+          - libnss-wrapper
+        state: present
+        update_cache: yes
+
+    # 2. Créer l'utilisateur et le groupe Spark
+    - name: Add spark group
+      group:
+        name: spark
+        gid: 185
+        state: present
+
+    - name: Add spark user
+      user:
+        name: spark
+        uid: 185
+        group: spark
+        create_home: no
+        system: yes
+
+    # 3. Créer les répertoires nécessaires pour Spark
+    - name: Create Spark directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: spark
+        group: spark
+        mode: "0755"
+      loop:
+        - "{{ spark_install_dir }}"
+        - "{{ spark_install_dir }}/python"
+        - "{{ spark_install_dir }}/examples"
+        - "{{ spark_install_dir }}/work-dir"
+
+    # 4. Télécharger Spark
+    - name: Download Spark tarball
+      get_url:
+        url: "{{ spark_download_url }}"
+        dest: /tmp/spark.tgz
+
+    # 5. Extraire Spark
+    - name: Extract Spark tarball
+      unarchive:
+        src: /tmp/spark.tgz
+        dest: "{{ spark_install_dir }}"
+        remote_src: yes
+        extra_opts:
+          - --strip-components=1
+
+    # 6. Définir les permissions
+    - name: Set ownership for Spark directory
+      file:
+        path: "{{ spark_install_dir }}"
+        state: directory
+        owner: spark
+        group: spark
+        recurse: yes
+
+    - name: Set permissions for work-dir
+      file:
+        path: "{{ spark_install_dir }}/work-dir"
+        mode: "0775"
+
+    # 7. Créer un fichier RELEASE
+    - name: Create Spark RELEASE file
+      file:
+        path: "{{ spark_install_dir }}/RELEASE"
+        state: touch
+        owner: spark
+        group: spark
+
+    # 8. Configurer PAM pour Spark
+    - name: Configure PAM for Spark
+      lineinfile:
+        path: /etc/pam.d/su
+        line: "auth required pam_wheel.so use_uid"
+        state: present
+
+    # 9. Copier le fichier entrypoint.sh
+    - name: Copy entrypoint.sh
+      copy:
+        src: entrypoint.sh
+        dest: /opt/entrypoint.sh
+        owner: spark
+        group: spark
+        mode: "0755"
+
+    # 10. Nettoyer les fichiers temporaires
+    - name: Remove temporary files
+      file:
+        path: /tmp/spark.tgz
+        state: absent
+
+    - name: Set environment variables in /etc/environment
+      lineinfile:
+        path: /etc/environment
+        line: "{{ item }}"
+        state: present
+      loop:
+        - JAVA_HOME=/opt/java/openjdk
+        - PATH=/opt/java/openjdk/bin:$PATH
+
+    - name: Verify Spark installation
+      shell: |
+        export JAVA_HOME=/opt/java/openjdk
+        export PATH=$JAVA_HOME/bin:$PATH
+        /opt/spark/bin/spark-shell --version
+      register: spark_output
+
+    - debug:
+        msg: "{{ spark_output.stdout }}"
+
+
+
