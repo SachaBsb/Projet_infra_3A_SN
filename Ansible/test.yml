@@ -1,5 +1,0 @@
-- name: Test Ansible Installation
-  hosts: localhost
-  tasks:
-    - name: Echo a message
-      command: echo "Ansible is working!"

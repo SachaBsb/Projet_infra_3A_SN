@@ -1,0 +1,48 @@
+Comment connecter deux machines en ssh de la manière la plus simple possible (la sécurité n'est pas un problème)
+
+Sur le serveur
+sudo apt update
+sudo apt install openssh-server
+
+sudo systemctl status ssh
+
+sudo systemctl start ssh
+
+ip a
+
+
+Sur le client
+ssh username@192.168.1.10
+
+
+Pour eviter les mdp
+Sur le client
+ssh-keygen -t rsa -N ""
+
+Sur le serveur
+ssh-copy-id username@192.168.1.10
+
+ssh username@192.168.1.10
+
+
+docker stop <container_id|container_name>
+docker rm -f <container_id|container_name>
+docker rmi -f <image_id|image_name>
+
+"tail", "-f", "/dev/null"
+
+
+sur mon mac hote 1 :
+sudo nano /etc/pf.conf
+
+# Allow forwarding between Docker and external network
+pass on en0 from {172.18.0.0/16} to any
+pass on en0 from any to {172.18.0.0/16}
+
+sudo pfctl -f /etc/pf.conf
+sudo pfctl -e
+
+sudo route -n add 172.19.0.0/16 172.20.10.6
+
+sur hote b 
+sudo ip route add 172.16.0.0/16 via 172.20.10.8

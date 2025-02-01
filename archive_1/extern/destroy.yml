@@ -1,0 +1,12 @@
+---
+- name: Deploy Docker containers using Terraform
+  hosts: localhost
+  tasks:
+    - name: Apply Terraform on the local machine
+      command: terraform -chdir=/Users/victor/Documents/N7/ProjetInfrastructure/Projet_infra_3A_SN/victor/intern destroy -auto-approve
+
+- name: Deploy Docker containers using Terraform
+  hosts: remote_host
+  tasks:
+    - name: Apply Terraform on the remote machine
+      command: terraform -chdir=/tmp/terraform_project/intern/ destroy -auto-approve -lock=false

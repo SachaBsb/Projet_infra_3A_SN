@@ -46,7 +46,8 @@ sudo pfctl -e
 sur hote b 
 sudo ip route add 172.16.0.0/16 via 172.20.10.8 dev wlp1s0
 sudo ip route add 10.33.33.2 via 172.20.10.8 dev wlp1s0
-
+ssh root@172.20.10.6 sudo ip route add 10.33.33.2 via 172.20.10.8 dev wlp1s0
+ssh root@172.20.10.6 sudo ip route add 172.16.0.0/16 via 172.20.10.8 dev wlp1s0
 
 ssh root@172.20.10.6 ip route show 
 
