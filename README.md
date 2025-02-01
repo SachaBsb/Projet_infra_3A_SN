@@ -1,219 +1,213 @@
 
-# **Diary** : 
+# Projet avec docker
 
-# 22/01/2025
-Apres etude du github, 
-1. copie de fichier du host vers les vms : commande scp ou playbook ansible
-2. on peut faire des fichiers yaml qui lancent des scripts dans les vms 
-3. Tout marche bien dans les yml pour l'installation mais ils ne semblent pas bon pour run des commandes, il vaut peut etre mieux copier des scripts dans les vms et les triggers avec ansible (yml).
+## 1 - Cluster spark sur une machine avec docker
 
-Youpi ! Tout fonctionne tres bien avec une seule vm, il faudrait juste un output dans la machine physique. 
+### Prérequis
+docker, ansible, terraform
+
+### Ce que fait le projet
+Crée un cluster spark avec docker et terraform sur une machine qui contient 1 driver, 1 master, 2 workers.
+Le projet se trouve dans /mac.
+
+### Executer le projet
+Lancer cette commande dans le terminal : 
+spark_docker_1_host.sh
+
+(si il manque de droit chmod +x spark_docker_1_host.sh)
+
+Pour vérifier que cela a fonctionné on a les résultats dans les logs du driver "wordcount-container", on peut aussi regarder les logs des workers et du master.
+docker logs wordcount-container  
+docker logs spark_master
+docker logs spark_worker_1
+docker logs spark_worker_2
+
+## 2 - Cluster spark sur deux machines avec docker
+(Les prérequis du projet étant difficile à atteindre, ce projet n'est pas éxecutable facilement, une démo à était faite mardi 28 février)
+
+### Prérequis
+Ce projet est fait pour la configuration suivante : 
+1 machine mac M1 arm64
+1 machine dualboot linux amd64
+
+Pour le lancer il faut que les deux ordinateurs soient sur le même réseau.
+Etant donné qu'on utilise docker sur mac il faut utiliser ce script sur le mac.
+https://github.com/chipmk/docker-mac-net-connect/blob/main/README.md#docker-mac-net-connect
+
+Il faut configurer les routes entre les hôtes.
+
+Sur hôte mac
+sudo route -n add 172.15.0.0/16 172.20.10.6
+
+sur hôte linux
+sudo ip route add 172.16.0.0/16 via 172.20.10.8 dev wlp1s0
+sudo ip route add 10.33.33.2 via 172.20.10.8 dev wlp1s0
+
+Enfin il faut connecter les deux hôtes en ssh.
+
+### Ce que fait le projet
+Le projet crée un cluster spark docker terraform et ansible deux machines qui éxecutent le programme wordcount.
+
+### Executer le projet
+Lancer ces commandes dans le terminal : 
+cd victor/intern
+ansible-playbook -i inventory.ini play.yml  
+
+Pour détruire l'infrastructure : 
+ansible-playbook -i inventory.ini destroy.yml  
+
+## 3 - Cluster spark sur une machine avec plus d'Ansible et moins de Docker
+
+### Prérequis
+1 machine de préférence arm64 (le projet fonctionne avec cette architecture mais devrait fonctionner avec amd64)
+Docker, ansible, terraform
+
+### Ce que fait le projet
+Le projet crée un cluster spark docker terraform et ansible une machine en utilisant ansible pour configurer la quasi-totalité des machines ubuntu. Il affiche à la fin le résultat de wordcount sur input.txt
+
+### Executer le projet
+cd victor/kaska
+./start.sh
+(génère une nouvelle clé ssh utilisé pour connecter ansible à la machine hôte)
+
+start.sh
+(lance tout les playbooks)
+Pour le setup se fait en copiant des dossiers du répertoire kaska au répertoire tmp/spoon_project. Ce répertoire est créé si il n'existe pas.
+
+destroy.sh
+(détruit l'infrastructure)
+
+L'éxecution du projet peut durer jusqu'à 10 minutes (Si mauvaise connection)
 
 
-Il faut maintenant refaire un réseau et voir pour partager les fichiers en HDFS.
+# Projet avec KVM
 
-# 21/01/2025
-De gros problèmes avec un wordcount basé sur java/spark, le stockage de la vm est immédiatement saturé lors de l'installation de java/spark. 
+## Introduction 
+Ce projet permet d'exécuter un wordcount sur des machines virtuelles en utilisant Terraform, KVM/Libvirt et Ansible. 
 
-Je vais tester avec python/pyspark voir si c'est plus léger et si cela ne marche pas j'essaierai avec d'autres vms.
+Il repose sur une structure commune et propose deux versions d'avancement :
 
-Y'en a marre, ca marche pas non plus avec python/spark, je vais chercher d'autres vms et mettre les pistes que j'ai exploré ici : 
-1. [Un github](https://github.com/ctl6998/kvm-remote-host) qui propose du 
+- kvm-2 : Déploie une unique VM, configure son environnement et exécute un wordcount sur celle-ci.
 
-D'apres victor il faut absolument dans la vm scala, spark et java python sont peut etre necessaire aussi, peu importe que le wordcount soit en python ou java. Info à verif ma gueule.
+- kvm-4 : Déploie plusieurs VMs connectées en réseau, avec un master et des workers, afin de distribuer les tâches. L'objectif final est d'exécuter un wordcount en parallèle sur plusieurs machines.
 
-Augmenter la taille du disk comme dans le github mentionné plus haut a marché, je peux tout installer maintenant, mais le wordcount python/spark ne fonctionne pas, à regler la prochaine fois ie faire un wordcount qui marche en java oub python.
+## Comment utiliser le projet : 
 
-## Utilisation de la commande `sudo du -sh /* | sort -h` à l'intérieur de la VM pour vérifier 
-1. VM avant d'utiliser le github
-    65M     /boot
-    631M    /var
-    650M    /snap
-    1.3G    /usr
-2. 
-
-# 20/01/2025
-Il faut recommencer terraform/kvm/ansible avec une solution wordcount qui utilise spark.
-Je recommence de zéro pour faire une vm configurée avec terraform/kvm/ansible qui utilise spark pour le wordcount.
-
-## Problemes rencontrés : 
-1. Terraform apply bloqué par un volume déjà existant : 
+### 1. Prérequis et initialisation : 
+Pour installer le necessaire afin de lancer le projet, on commence par cloner le git, puis on suit les instructions suivante : 
     
-    `sudo virsh vol-delete --pool default <volume_name>`
+- Commandes à lancer : 
+    ```
+    # On clone le projet puis on se place dans le repository crée :
+    git clone https://github.com/SachaBsb/Projet_infra_3A_SN.git
+    cd Projet_infra_3A_SN
 
+    # Installation des dépendances
+    chmod +x install_dependencies.sh
+    sudo ./install_dependencies.sh
+    ```
 
+📌 Ce que fait ce script : 
 
+✅ Met à jour le système
+✅ Installe Terraform, KVM, Libvirt, Ansible, jq et d'autres outils
+✅ Ajoute l'utilisateur au groupe libvirt
+✅ Vérifie que KVM est activé
+✅ Démarre et active Libvirt et le réseau par défaut
 
-# 17/01/2025
-Je vais continuer de resoudre les pbs avec chatgpt en lui disant a chaque fois quelle solution a fonctionné pour qu'il me liste bien a la fin les difficultés rencontrées pour le rapport et continuer de taffer.
-Je supprimerai pour le rapport les mentions de chatgpt etc.
-
-Path vers la cle ssh et adresses ip des vms update dans inventory par update_inventory.sh
-
-Pour l'instant, run : `./setup_and_run.sh` pour lancer tout le programme, on pourrait rendre le debug plus facile en divisant en différents .sh les différentes commandes dans setup_and_run.sh pour debugb plus facilement mais ya pas le temps !
-
-Beaucoup d'erreurs, j'etais allé jusqu'a l'etape de partition pour les workers du texte sur lequel il faut faire le wordcount, la communication entre vms fonctionnait (`ansible -i inventory all -m ping`). J'ai eu des erreurs et maintenant j'en suis au début du run de la partie ansible qui fail, je pense qu'il faut revenir dans la conv chatgpt juste avant le msg ou j'annonce que j'ai eu mon best résultat pour reprendre cette config.
-
-
-## Reste a faire : 
-1. Faire en sorte que les adresses ip soient gérée dynamiquement ou statiquement mais qu'on ait pas besoin de les copier coller ou alors que les vms soient gérées via leurs noms : 
+### 2. Lancer le projet : 
+Pour lancer le projet, on se place dans le dossier dont le nom correspond à la version du projet que l'on souhaite lancer (kvm-2 ou kvm-4) puis on suit les instructions suivantes : 
     
-    Il y  a peut etre des solutions utilisant juste ansible ou d'autres utilisant juste le shell
+```
+chmod +x setup_x_run.sh
+./setup_x_run.sh
+```
 
-2. Clé SSH ou autre solution pour que le setup_and_run.exe fonctionne sans sudo à compléter
-3. Diviser les fichiers de commandes .sh en plusieurs sous-fichiers dans un directory (ex : commands) pour run des commandes séparéments en débugs et pas tout run du début à chaque fois.
+📌 Ce que fait ce script : 
 
-    exemple :
-        commands
-            |
-            --- setup_terraform.sh
-            --- setup_venv.sh
-            --- setup_ansible.sh
-            --- run_all_commands.sh
+✅ Initialise Terraform et applique la configuration \
+✅ Met à jour l’inventaire Ansible \
+✅ Lance les playbooks Ansible 
 
-## Commandes actuelles pour lancer le projet : 
-1. Vérifier et lancer Terraform
-    Initialiser Terraform (si ce n'est pas déjà fait) :
+### 3. Tester le projet
+Ensuite, pour effectuer les tests/vérifications  
 
-    `terraform init`
+#### 3.1 Tester kvm-2
+Après lancement de setup_x_run.sh, pour vérifier les résultats du wordcount, on suit les instructions suivantes : 
 
-    Appliquer la configuration pour créer les VMs (master + workers) :
+```
+# Se connecter à la VM : 
+ssh -i /path/to/private_key ubuntu@ 
 
-    `terraform apply`
+# Observer le résultat du wordcount
+cat wordcount/output/part-00000
+cat wordcount/output/part-00001
 
-2. Vérifier les ressources créées par Terraform
-    Afficher les adresses IP du master et des workers (si configuré dans output) :
+```
 
-    terraform output
+📌 Ce que fait ce script : 
 
-    Tester l'accès SSH à la VM master :
+✅ Vérifie la connexion aux VMs avec Ansible ping
 
-    `ssh -i ~/.ssh/id_rsa_terraform ubuntu@<ip_master>`
+#### 3.2 Tester kvm-4
+Après lancement de setup_x_run.sh, pour vérifier la bonne connections entre les différentes VM du réseau, on suit les instructions suivantes : 
 
-3. Entrer en environnement virtuel avant la partie Ansible : 
+```
+ansible -i inventory all -m ping
+```
 
-4. Configurer les VMs avec Ansible
-    Tester la connectivité Ansible avec le fichier inventory :
+📌 Ce que fait ce script : 
 
-    `ansible -i inventory all -m ping`
+✅ Vérifie la connexion aux VMs avec Ansible ping
 
-    Configurer les workers (installer Python, copier le script, etc.) :
+### 4. Nettoyer l'environnement après utilisation du projet
+Lancer la commande : 
+```
+chmod +x cleanup.sh
+./cleanup.sh
+```
 
-    `ansible-playbook -i inventory worker.yml`
+# Structure du projet :
+## Les principaux fichiers : 
+- main.tf : Structure du projet, initialisation des vms 
+- inventory : Inventaire mis à jours par un script et répertoriant les adresses ip des vms et les clés ssh
+- setup_x_run.sh : Lancement du projet
+- input.txt : texte sur lequel le wordcount est effectué
 
-    Configurer le master et exécuter le script principal (distribuer les tâches aux workers) :
+## Brève explication des différents dossiers/versions 
+Les dossiers contenant des versions fonctionnelles du projet (kvm-2, kvm-4) sont directement présents dans le dossier kvm, les autres versions dans lesquels nous pu effectuer des tests sont disponible dans le dossier kvm/archives. Ces versions du projet dans l'archive ne sont pas à tester mais peuvent permettre (au même titre que le journal de bord diary.md) de comprendre la démarche et les différentes étapes lors de l'avancement du projet.
 
-    `ansible-playbook -i inventory master.yml`
+### kvm : 
 
-5. Résultats attendus
+Réseau de VMs en local qui communiquent entre elles et effectuent un wordcount (non basé sur java/spark)
 
-    Les VMs (master + workers) sont créées et accessibles via SSH.
-    Les workers sont configurés pour exécuter le WordCount.
-    Le master distribue les partitions du texte aux workers, collecte les résultats, et affiche les WordCounts.
+### kvm-2 : 
 
-## Probleme et solutions :
-### terraform apply retourne : `failed to dial libvirt: permission denied`
-#### Cause : 
-L'utilisateur n'a pas les permissions pour accéder au socket /var/run/libvirt/libvirt-sock.
-#### Solution :
+Une VM crée avec terraform/kvm qui effectue un wordcount avec java/spark installé via ansible
 
-Ajoutez l'utilisateur au groupe libvirt :
-    `sudo usermod -aG libvirt $(whoami) && newgrp libvirt`
+### kvm-v3
 
-Vérifiez les permissions du socket :
-    `ls -l /var/run/libvirt/libvirt-sock`
+Tentative de réseau de VMs
 
-Si besoin, corrigez-les :
-    `sudo chown root:libvirt /var/run/libvirt/libvirt-sock && sudo chmod 660 /var/run/libvirt/libvirt-sock`
+### kvm-4
 
-Redémarrez le service libvirtd :
-    `sudo systemctl restart libvirtd`
-
-Testez avec virsh :
-    `virsh list --all`
-
-Après ces étapes, relancez terraform apply
-
-# 14/01/2025
-On a commencé le projet avec terraform/docker pour contourner le pb de kvm qui ne fonctionne pas sur mac, mais Boris nous a dit qu'il veut qu'on utilise kvm, même si c'est sur une seule machine.
-
-A terme, on veut aussi une vm qui heberge un site pour lancer le wordcount et voir les résultats.
+Un réseau de VMs en local qui se ping mais qui après configuration via playbook rate   
 
 
-importer l'image ubuntu : 
-wget https://cloud-images.ubuntu.com/focal/current/focal-server-cloudimg-amd64.img
+## Explication des contenus des dossiers kvm 
+Chaque version du projet utilisant kvm sont basés sur la même architecture : 
+Des dossiers pour centraliser certaines solutions : 
+- ansible
 
-## Les différents types de fichiers et leurs raison d'être : 
-main.tf : Définit la configuration principale pour Terraform, y compris les ressources à créer (VMs, volumes, etc.). \
-cloudinit.yaml : Configure automatiquement les VMs lors de leur démarrage initial (utilisateurs, logiciels, scripts). \
-terraform.tfvars : Fournit les valeurs spécifiques aux variables définies dans variables.tf. \
-variables.tf : Définit les variables utilisées dans main.tf pour rendre la configuration modulaire et réutilisable. \
-playbook.yaml : Automatiser les tâches de configuration et déploiement sur les VMs avec Ansible (installation de logiciels, déploiement de scripts). \
+    Les fichiers yaml
 
+    - Configuration des vms (cloudinit.yml) avec attribution des clés ssh
+    - Installation des ressources necessaires 
+    - Lancement des 
 
-## Virsh
-Verifier avec terraform les vm crées : 
-`virsh list` \
-Voir leurs adresses ip : 
-`virsh domifaddr <nom_de_la_vm>`
-## Ansible 
-Commande pour lancer le playbook : `ansible-playbook -i inventory wordcount.yml`
+- script 
 
-Commande pour générer une clé SSH pour ne pas toujours avoir à rentrer le login/password
-`ssh-keygen -t rsa -b 2048 -f ~/.ssh/id_rsa_terraform -N ""`
-Il faut ensuite mettre le contenu de la clé publique générée dans cloudinit.yaml (ssh-authorized-keys) puis le path de la clé privée dans inventory.sh
+    Tous les scripts necessaires
 
-## Ce qui est tenté : 
-J'essaie de créer une machine avec terraform/kvm et libvirt comme provider et qu'elle soit configurée avec ansible pour faire un wordcount.
-
-C'est bon, j'ai réussi à mettre une adresse ip à ma vm, je vais maintenant pouvoir tester ansible.
-
-Ansible fonctionne ! J'ai pu faire un wordcount sur une vm. 
-
-J'ai commencé à faire un worker et plusieurs vms, les yaml pour configurer les workers et le master ne fonctionnent pas, j'ai l'impression qu'il y a un problème avec le `inventory`. Peut être un problème d'adresse IP ou de clé SSH commune.
-
-J'ai essayé de changer le nom du projet local en "Projet_infra_3ASN" a voir si ca a quitté le git.
-
-
-
-
-## Difficultés rencontrées : cf chat-gpt
-Pas d'adresse IP attribuée à la VM
-
-    Problème : Terraform ne pouvait pas récupérer une adresse IP pour la VM.
-    Causes : Réseau "default" inactif ou mal configuré ; absence de qemu-guest-agent.
-    Solution : Activation du réseau "default" dans KVM et installation de qemu-guest-agent via cloud-init.
-
-Demande de login/mot de passe dans la VM
-
-    Problème : Connexion via virsh console demandait un login et un mot de passe.
-    Causes : cloud-init non configuré pour ajouter un utilisateur ou une clé SSH.
-    Solution : Configuration d’un fichier cloudinit.yaml pour créer un utilisateur ubuntu et ajouter une clé SSH.
-
-Absence de mkisofs
-
-    Problème : Terraform retournait une erreur indiquant que mkisofs n'était pas installé.
-    Causes : Le binaire manquait sur le système.
-    Solution : Installation de genisoimage ou création d’un lien symbolique vers /usr/bin/mkisofs.
-
-Ansible ne trouvait pas l’inventaire
-
-    Problème : Ansible ne trouvait pas le fichier inventory.
-    Causes : Mauvais nom du fichier ou chemin incorrect.
-    Solution : Renommer le fichier en inventory et utiliser son chemin absolu.
-
-Problèmes d’authentification SSH avec Ansible
-
-    Problème : Erreur Permission denied (publickey,password) lors de la connexion.
-    Causes : Clé SSH incorrecte ou absente dans inventory; clé publique non configurée dans la VM.
-    Solution : Génération d’une clé SSH, ajout au cloudinit.yaml, et test manuel de la connexion.
-
-Avertissement Ansible : clé SSH non approuvée
-
-    Problème : Ansible demandait de confirmer les clés SSH des hôtes.
-    Solution : Pré-approuver manuellement les clés SSH ou désactiver la vérification avec host_key_checking = False.
-
-Déploiement et exécution du WordCount
-
-    Problème : La configuration manuelle des dépendances et scripts était fastidieuse.
-    Solution : Automatisation via Ansible avec un fichier wordcount.yml pour installer Python, copier les fichiers, et exécuter le script.
+    - cleanup.sh
+    - ssh_key_gen
