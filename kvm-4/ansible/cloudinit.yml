@@ -1,0 +1,48 @@
+#cloud-config
+users:
+  - name: ubuntu
+    ssh-authorized-keys:
+      # - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyNvxuY/AHDT6AOeo7vgymv0d4UCaER6FHQPSxEDfX/s7xVc7xnwyHMcjhNcDs9Jeqjp0lPlbwsGcz8kwLS4/CASXKNUaP7d5S+8FzVaqJZi84HG51AxvYBwPUSG8xvkjpJiJqkGgVdyaWRhbphsif0NX++Fp96brm4XK9vVB0kprHkHEbIeKynxTi+OjLiEZ1VAACtRJQ0gfnAPKnCLvg/9Ch1cXQJmVx+nAC/y2MPNVLU1YI4jlaVuy33bnDt7Ywkt44/b8rTuAbBYfSTslvgtO3ukfhjfiNxR/SxKt3ehawYHLs/npZT7qv1WjwxLXC+GDFgqVsdA/oONBZgn+R
+      # - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC7661M97CH5HaGJlULTXsBn/xCGTJfUdAk2paGd/JtVqWPDZ13U8qH/DCwvi9zrpLgsFArYrc4ue4FxidG2Ne5Ul+LSTlOp+fL3GqGyJnRkrKD54Xd+lDrmuZ0vOC+msVdTc7YCVgW+hSgH4TOBpz61hyNm2naqABksOQFpS4mqlHqxLNSvTLhgQtlzQr+vhYMZoVFCGAMXN8tFdPqeKzxeCbmVOPsI/wPd4UXnJhu5plBID3jdr7DypB481faK5fyVmlXQtmTeKSZsaOX5UglB4Ldx+7+mNRh1O5raa9ABOaNDHwU8+doZwuPuqi/FX6KuCtvcyv6bHi0Oyu/Poyj+ACP1MVQzP788PGGS8MYCky0uxLP85k2kf1mSAVknGpKJPfer72Ma2nc04GH1XobtEMYvGozti2p2UkbsUngBgitBDiOk5wo/24PsM7jYgHPjfj4tKKKwLrmzd8bugwqIZXA6mjynduEa1qf0rod/YU/hRzRNcKArOyVknmNZGHTGNO1wdkUojnICFK7+CnhVcE8EQY6eCTEmaZcksJ7RTmbaq5Q2hRJvFyxuTH79jv4wGXsSxAOFlUsWwFfReZFZ6r0BHahbJP/mHV+f5Aw0+twTDLCsGbLxnd6oS1GlmEk4Lr157JgsiOmrLsl6i/h4zHtROPhN5EBu4oT1WECrQ==    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDaisXkpSb18uvr37UsiE6Y6DE3m3Q+Txjtn1WieWJgOTUqRGGrY+jJ3a+DuzEnFPAv+bsRJMdRQ3kt5Oh2oEmpUx6s6IWOCkEz1wbzgTQg0qcld2ExdAYkG1JoqwFdndCMIoiAbhsPvtOjsaMdFU9vv3e/7ZUV3YDY545zSTW0zsD2FcVWNPTRCzPo4i02iPEaeTwPZZBdfWoFTgQqgNiePotX35hyn79QFSGa7ADkuIA5zlrBWpa/z9EVGMFiyuZn18TupM9NKtUvV5bnP3xsNhABiXown+JTka3axGQkDZd04OnoZUD5hESZepTST+FEXXMuWWz0900rR/a/XXkf    
+    groups: sudo
+    shell: /bin/bash
+    passwored: ubuntu
+
+password: ubuntu
+chpasswd:
+  expire: false
+ssh_pwauth: true
+packages:
+  - qemu-guest-agent
+
+network:
+  version: 2
+  ethernets:
+    vnet9:
+      dhcp4: false
+      addresses:
+        - 192.168.123.100/24
+      gateway4: 192.168.123.1
+      nameservers:
+        addresses:
+          - 8.8.8.8
+          - 8.8.4.4
+    vnet11:
+      dhcp4: false
+      addresses:
+        - 192.168.123.101/24
+      gateway4: 192.168.123.1
+      nameservers:
+        addresses:
+          - 8.8.8.8
+          - 8.8.4.4
+    vnet10:
+      dhcp4: false
+      addresses:
+        - 192.168.123.102/24
+      gateway4: 192.168.123.1
+      nameservers:
+        addresses:
+          - 8.8.8.8
+          - 8.8.4.4

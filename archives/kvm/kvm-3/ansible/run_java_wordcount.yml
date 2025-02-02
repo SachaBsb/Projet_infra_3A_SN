@@ -1,0 +1,39 @@
+- name: Manage WordCount in VM
+  hosts: all
+  become: yes
+  tasks:
+    - name: Change ownership of wordcount and script directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+        recurse: yes  # Applies to all subdirectories and files
+      loop:
+        - /home/ubuntu/wordcount
+        - /home/ubuntu/script
+
+    - name: Set correct permissions for wordcount and script directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+        recurse: yes
+      loop:
+        - /home/ubuntu/wordcount
+        - /home/ubuntu/script
+      
+    - name: Compile WordCount Java program
+      shell: sudo -u ubuntu /usr/bin/bash -ilc /home/ubuntu/script/compile_wordcount.sh
+      args:
+        executable: /bin/bash
+
+    - name: Create WordCount JAR file
+      shell: sudo -u ubuntu /usr/bin/bash -ilc /home/ubuntu/script/create_jar.sh
+      args:
+        executable: /bin/bash
+
+    - name: Run WordCount program
+      shell: sudo -u ubuntu /usr/bin/bash -ilc /home/ubuntu/script/run_wordcount.sh
+      args:
+        executable: /bin/bash

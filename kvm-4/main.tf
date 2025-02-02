@@ -12,19 +12,21 @@ provider "libvirt" {
 }
 
 resource "libvirt_cloudinit_disk" "vm_cloudinit" {
-  name      = "vm-cloudinit"
+  count     = var.vm_count
+  name      = "${var.vm_names[count.index]}_${count.index}_cloudinit"
   user_data = file("ansible/cloudinit.yml")
 }
 
 resource "libvirt_volume" "vm_base" {
-  name   = var.vm_name
+  name   = var.vm_base_name
   pool   = "default"
   source = var.vm_image
   format = "qcow2"
 }
 
 resource "libvirt_volume" "vm_disk" {
-  name           = "vm-disk.qcow2"
+  count          = var.vm_count
+  name           = "${var.vm_names[count.index]}_${count.index}_disk.qcow2"
   pool           = "default"
   base_volume_id = libvirt_volume.vm_base.id
   size           = 20 * 1024 * 1024 * 1024
@@ -32,25 +34,27 @@ resource "libvirt_volume" "vm_disk" {
 }
 
 resource "libvirt_domain" "vm" {
-  name   = var.vm_name
+  count  = var.vm_count
+  name   = "${var.vm_names[count.index]}_${count.index}"
   memory = var.vm_memory
   vcpu   = var.vm_vcpu
 
   disk {
-    volume_id = libvirt_volume.vm_disk.id
+    volume_id = libvirt_volume.vm_disk[count.index].id
   }
   
   network_interface {
     network_name = var.vm_network
     wait_for_lease = true
+    # addresses = [var.network_ips[count.index]]
   }
+
  
-  cloudinit = libvirt_cloudinit_disk.vm_cloudinit.id
+  cloudinit = libvirt_cloudinit_disk.vm_cloudinit[count.index].id
 
 }
 
-output "vm_ip" {
-  value = libvirt_domain.vm.network_interface[0].addresses[0]
+output "vm_ips" {
+  value = [for vm in libvirt_domain.vm : vm.network_interface[0].addresses[0]]
 }
-
 

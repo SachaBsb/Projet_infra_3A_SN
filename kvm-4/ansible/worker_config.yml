@@ -1,6 +1,6 @@
 ---
 - name: Set up Java and Apache Spark for WordCount
-  hosts: all
+  hosts: [worker_vm_0, worker_vm_1, worker_vm_2]  
   become: yes
   tasks:
     - name: Wait for apt lock to be released
@@ -28,10 +28,11 @@
         mode: '0755'
 
     - name: Install OpenJDK
-      copy: 
-        src: /home/lousteau/hagimont_software/jdk-8u202-linux-x64.tar.gz
-      # get_url:
-      #   url: https://sd-160040.dedibox.fr/hagimont/software/jdk-8u202-linux-x64.tar.gz
+    # apt:
+    #     name: openjdk-8-jdk
+    #     state: present
+      get_url:
+        url: https://sd-160040.dedibox.fr/hagimont/software/jdk-8u202-linux-x64.tar.gz
         dest: /home/ubuntu/install/jdk-8u202-linux-x64.tar.gz
         mode: '0644'
 
@@ -42,10 +43,8 @@
         remote_src: yes
 
     - name: Download Spark
-      copy: 
-        src: /home/lousteau/hagimont_software/spark-2.4.3-bin-hadoop2.7.tgz
-      # get_url:
-      #   url: https://sd-160040.dedibox.fr/hagimont/software/spark-2.4.3-bin-hadoop2.7.tgz
+      get_url:
+        url: https://sd-160040.dedibox.fr/hagimont/software/spark-2.4.3-bin-hadoop2.7.tgz
         dest: /home/ubuntu/install/spark-2.4.3-bin-hadoop2.7.tgz
         mode: '0644'
 

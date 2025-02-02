@@ -4,48 +4,35 @@
   become: yes
   tasks:
     - name: Wait for apt lock to be released
-      shell: |
-        while fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1; do
-          echo "Waiting for other apt-get process to finish..."
-          sleep 5
-        done
-    # Correction : apt get error 
-    - name: Kill any existing apt-get processes
-      shell: |
-        pids=$(pgrep apt-get)
-        if [ -n "$pids" ]; then
-          kill -9 $pids
-        fi
+      command: "sleep 5"
+      retries: 10
+      delay: 5
+      register: result
+      until: result.rc == 0
+
 
     - name: Update apt package index
       apt:
         update_cache: yes
 
-    - name: Create directory for installation
+    - name: Install OpenJDK
+      apt:
+        name: openjdk-8-jdk
+        state: present
+
+    - name: Verify Java installation
+      command: java -version
+      ignore_errors: yes
+
+    - name: Create directory for Spark installation
       file:
         path: /home/ubuntu/install
         state: directory
         mode: '0755'
 
-    - name: Install OpenJDK
-      copy: 
-        src: /home/lousteau/hagimont_software/jdk-8u202-linux-x64.tar.gz
-      # get_url:
-      #   url: https://sd-160040.dedibox.fr/hagimont/software/jdk-8u202-linux-x64.tar.gz
-        dest: /home/ubuntu/install/jdk-8u202-linux-x64.tar.gz
-        mode: '0644'
-
-    - name: Extract JDK 
-      ansible.builtin.unarchive:
-        src: /home/ubuntu/install/jdk-8u202-linux-x64.tar.gz
-        dest: /home/ubuntu/install
-        remote_src: yes
-
     - name: Download Spark
-      copy: 
-        src: /home/lousteau/hagimont_software/spark-2.4.3-bin-hadoop2.7.tgz
-      # get_url:
-      #   url: https://sd-160040.dedibox.fr/hagimont/software/spark-2.4.3-bin-hadoop2.7.tgz
+      get_url:
+        url: https://sd-160040.dedibox.fr/hagimont/software/spark-2.4.3-bin-hadoop2.7.tgz
         dest: /home/ubuntu/install/spark-2.4.3-bin-hadoop2.7.tgz
         mode: '0644'
 
@@ -104,26 +91,6 @@
       apt:
         name: maven
         state: present
-
-    - name: Set up environment variables in .bashrc
-      blockinfile:
-        path: /home/ubuntu/.bashrc
-        block: |
-          # Java environment variables
-          export JAVA_HOME=/home/ubuntu/install/jdk1.8.0_202
-          export PATH=$JAVA_HOME/bin:$PATH
-
-          # Hadoop environment variables
-          export HADOOP_HOME=/home/ubuntu/install/hadoop-2.7.1
-          export PATH=$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$PATH
-
-          # Spark environment variables
-          export SPARK_HOME=/home/ubuntu/install/spark-2.4.3-bin-hadoop2.7
-          export PATH=$PATH:$SPARK_HOME/bin:$SPARK_HOME/sbin
-          
-    - name: Verify Java installation
-      command: java -version
-      ignore_errors: yes
 
     # - name: Compile WordCount Java program
     #   shell: |

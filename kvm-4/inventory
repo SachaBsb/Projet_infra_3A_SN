@@ -1,0 +1,5 @@
+[master]
+master_vm_0 ansible_host=192.168.123.13 ansible_user=ubuntu ansible_ssh_private_key_file=/home/lousteau/.ssh/id_rsa_terraform ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+[worker]
+worker_vm1_1 ansible_host=192.168.123.21 ansible_user=ubuntu ansible_ssh_private_key_file=/home/lousteau/.ssh/id_rsa_terraform ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+worker_vm2_2 ansible_host=192.168.123.54 ansible_user=ubuntu ansible_ssh_private_key_file=/home/lousteau/.ssh/id_rsa_terraform ansible_ssh_common_args='-o StrictHostKeyChecking=no'
